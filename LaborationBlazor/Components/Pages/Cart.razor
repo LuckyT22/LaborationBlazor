@@ -1,0 +1,134 @@
+﻿@page "/cart"
+
+@inject ProductCard Card
+@inject DataAccess dataAccess
+@inject NavigationManager navigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+
+@rendermode InteractiveServer
+
+<h3>Cart</h3>
+
+<div>
+    @if (cart.Any())
+    {
+        @foreach (var product in cart)
+        {
+            <ul>
+                <li>@product.Name</li>
+            </ul>
+            SavedCartItems = cart;
+        }
+
+<EditForm Model="contact" method="post" OnValidSubmit="FormSubmit" >
+<DataAnnotationsValidator />
+    <h4>Contact information</h4>
+    <hr />
+    <div class="form-group row">
+        <label for="firstName" class="col-sm-2 col-form-label">
+            First Name
+        </label>
+        <div class="col-sm-10">
+            <InputText id="firstName" class="form-control" placeholder="First Name"
+                       @bind-Value="contact.FirstName" />
+                    <ValidationMessage For="() => contact.FirstName" />
+        </div>
+    </div>
+    <br />
+    <div class="form-group row">
+        <label for="lastName" class="col-sm-2 col-form-label">
+            Last Name
+        </label>
+        <div class="col-sm-10">
+            <InputText id="lastName" class="form-control" placeholder="Last Name"
+                       @bind-Value="contact.LastName" />
+                    <ValidationMessage For="() => contact.LastName" />
+        </div>
+    </div>
+    <br />
+    <div class="form-group row">
+        <label for="email" class="col-sm-2 col-form-label">
+            Email
+        </label>
+        <div class="col-sm-10">
+            <InputText id="email" class="form-control" type="email" placeholder="Email"
+                       @bind-Value="contact.Email" />
+                    <ValidationMessage For="() => contact.Email" />
+        </div>
+    </div>
+    <br />
+    <div class="form-group row">
+        <label for="email" class="col-sm-2 col-form-label">
+            Phone Number
+        </label>
+        <div class="col-sm-10">
+            <InputText id="phone" class="form-control" type="number" placeholder="Phone Number"
+                        @bind-Value="contact.Phone" />
+                    <ValidationMessage For="() => contact.Phone" />
+        </div>
+    </div>
+    <br />
+    <div class="form-group row">
+        <label for="email" class="col-sm-2 col-form-label">
+            Address
+        </label>
+        <div class="col-sm-10">
+            <InputText id="address" class="form-control" placeholder="Address"
+                        @bind-Value="contact.Address" />
+                    <ValidationMessage For="() => contact.Address" />
+        </div>
+    </div>
+    <br />
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+    }
+    else
+    {
+        @if (submitted)
+        {
+            <p>You ordered:</p>
+            @foreach (var product in SavedCartItems)
+            {
+                <ul>
+                    <li>@product.Name</li>
+                </ul>
+            }
+            <p>It will be delivered to: @contact.LastName, @contact.FirstName</p>
+            <p>On this address: @contact.Address</p>
+        }
+        else
+        {
+        <p>Your cart is empty</p>
+        }
+    }
+
+</div>
+
+@code {
+    public Product product { get; set; }
+    public List<Product>? cart { get; set; } = new();
+    public List<Product> SavedCartItems { get; set; }
+
+    bool submitted = false;
+
+    [SupplyParameterFromForm]
+    public Contact contact { get; set; } = new Contact { FirstName = ""};
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            cart = await localStorage.GetItemAsync<List<Product>>("cart") ?? new List<Product>();
+            StateHasChanged();
+        }
+    }
+    async Task FormSubmit()
+    {
+        submitted = true;
+        cart = new();
+        await localStorage.SetItemAsync<List<Product>>("cart", cart);
+    }
+}

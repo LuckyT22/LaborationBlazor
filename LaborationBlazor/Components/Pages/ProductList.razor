@@ -1,0 +1,55 @@
+﻿@page "/product-list"
+
+@inject DataAccess dataAccess
+@inject NavigationManager navigationManager
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<h3>Product List</h3>
+
+@if(products is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div id="product-grid" class="mt-5">
+        @foreach (var product in products)
+        {
+            <ProductCard product="product"></ProductCard>
+        }
+    </div>
+    <button class="btn btn-primary" style="float:left; margin: 2rem;" @onclick="AddNewProduct">Add new product</button>
+}
+@code {
+    private List<Product> products;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var result = await dataAccess.GetAllProducts();
+            products = result;
+            StateHasChanged();
+        }
+    }
+
+    [Parameter]
+    public Product product { get; set; }
+
+    List<Product> ProductsList = new List<Product>()
+        {
+            new Product(){ Name ="Tandpetare", ImageName = "toothpick.jpg"},
+            new Product(){ Name ="GTA 6", ImageName = "gta6.jpg"},
+            new Product(){ Name ="Coca-cola", ImageName = "coca-cola.jpg"},
+            new Product(){ Name ="En näsduk", ImageName = "napkin.jpg"},
+            new Product(){ Name ="Ostbåge", ImageName = "cheesepuff.jpg"},
+            new Product(){ Name ="Ett ägg", ImageName = "Egg.jpg"},
+        };
+
+    void AddNewProduct()
+    {
+        navigationManager.NavigateTo("products");
+    }
+}

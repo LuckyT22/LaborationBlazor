@@ -1,0 +1,42 @@
+﻿@inject Blazored.LocalStorage.ILocalStorageService localStorage 
+<div class="card" style="width: 18rem; float: left; margin: 3rem;">
+    <div @onclick="() => EditProduct(product.Id)">
+    <img src="Images/@product?.ImageName" class="card-img-top" 
+    accept="image/*" alt="..." style="max-height: 191px;">
+  
+    <div class="card-body">
+        <h5 class="card-title">@product.Name</h5>
+        <p class="card-text">@product.Info</p>
+        <p class="card-text">@product.Price kr</p>
+    </div>
+    </div>
+    <button @onclick="() => AddToCart(product)">Add to cart</button>
+</div>
+@code {
+    [Parameter]
+    public Product? product { get; set; }
+
+    @inject NavigationManager navigationManager
+
+    void EditProduct(int id)
+    {
+        navigationManager.NavigateTo("products/" + id);
+    }
+
+    public List<Product> cart { get; set; }
+    async Task AddToCart(Product product)
+    {
+        cart = await localStorage.GetItemAsync<List<Product>>("cart");
+        if(cart is null)
+        {
+            cart = new();
+        }
+        cart.Add(product);
+        await localStorage.SetItemAsync<List<Product>>("cart", cart);
+    }
+        // Hämta befintlig lista från localStorage om den finns
+        // Om den inte finns, skapa en ny
+        // Lägg till produkt i listan
+        // Skriv in nya listan i localStorage
+
+}

@@ -1,0 +1,90 @@
+﻿@page "/products"
+@page "/products/{id:int}"
+
+@inject DataAccess dataAccess
+@inject NavigationManager navigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+
+@rendermode InteractiveServer
+
+<h3>@product.Name</h3>
+
+@if(Id != 0)
+{
+    <img src="Images/@product.ImageName" class="card-img-top"
+    accept="image/*" alt="..." style="max-height: 191px; max-width: 18rem; margin: 1rem;">
+    <p>Id: @product.Id</p>
+    <p>Name: @product.Name</p>
+    <p>Info: @product.Info</p>
+    <p>Price: @product.Price</p>
+    <p>Image Name: @product.ImageName</p>
+    <button @onclick="() => AddToCart(product)">Add to cart</button>
+
+}
+else
+{
+    <h3>Add product</h3>
+
+    <EditForm Model="product" OnSubmit="HandleSubmit" FormName="productForm">
+        <label>Name</label>
+        <InputText @bind-Value="product.Name">@product.Name</InputText>
+    </EditForm>
+    <EditForm Model="product" OnSubmit="HandleSubmit" FormName="productForm">
+        <label>Info</label>
+        <InputText @bind-Value="product.Info">@product.Info</InputText>
+    </EditForm>
+    <EditForm Model="product" OnSubmit="HandleSubmit" FormName="productForm">
+        <label>Price</label>
+        <InputNumber @bind-Value="product.Price">@product.Price</InputNumber>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </EditForm>
+}
+
+
+
+    @code {
+    [Parameter]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Product product { get; set; } = new Product { Name = "" , ImageName = "" };
+
+    private bool editMode = false;
+    async Task HandleSubmit()
+    {
+        if (editMode)
+        {
+            await dataAccess.UpdateProduct(product);
+        }
+        else
+        {
+            await dataAccess.AddProduct(product);
+        }
+        navigationManager.NavigateTo("/product-list");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(Id != 0)
+        {
+            var result = await dataAccess.GetProductById(Id);
+            if(result is not null)
+            {
+                product = result;
+                editMode = true;
+            }
+        }
+    }
+    public List<Product> cart { get; set; }
+    async Task AddToCart(Product product)
+    {
+        cart = await localStorage.GetItemAsync<List<Product>>("cart");
+        if (cart is null)
+        {
+            cart = new();
+        }
+        cart.Add(product);
+        await localStorage.SetItemAsync<List<Product>>("cart", cart);
+    }
+}
